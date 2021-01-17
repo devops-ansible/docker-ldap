@@ -27,7 +27,7 @@ OpenLDAP Server based on devopsansiblede/baseimage:latest. Supports data loading
 
 Start a new openldap server instance, import config & data.ldif's from another instance and persist the state in _data_
 ```sh
-docker run -d -p 389:389 -p 636:636 -v $PWD/data/database:/var/lib/ldap -v $PWD/data/config:/etc/ldap/slapd.d -v $PWD/import:/import --name ldap iteconomics/openldap:latest
+docker run -d -p 389:389 -p 636:636 -v $PWD/data/database:/var/lib/ldap -v $PWD/data/config:/etc/ldap/slapd.d -v $PWD/import:/import --name ldap devopsansiblede/ldap:latest
 ```
 
 ### Volumes
