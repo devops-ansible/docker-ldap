@@ -1,6 +1,7 @@
 name: Build this Docker image
 on:
   workflow_dispatch:
+  repository_dispatch:
   push:
     branches: master
   schedule:
