@@ -1,6 +1,6 @@
 # OpenLDAP
 
-OpenLDAP Server based on iteconomics/base-image. Supports data loading via volume mount as well as SSL based LDAP (ldaps).
+OpenLDAP Server based on devopsansiblede/baseimage:latest. Supports data loading via volume mount as well as SSL based LDAP (ldaps).
 
 ## ENV Variables
 
