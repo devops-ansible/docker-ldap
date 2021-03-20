@@ -149,4 +149,4 @@ fi
 export LDAP_SERVICES
 
 # Set rights before startup
-chown -R ${LDAP_USER}:${LDAP_GROUP} /var/lib/ldap /etc/ldap/slapd.d
+chown -R ${LDAP_USER}:${LDAP_GROUP} /var/lib/ldap /etc/ldap/slapd.d &

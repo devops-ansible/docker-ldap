@@ -3,8 +3,7 @@
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd ${SCRIPT_PATH}
 
-chmod a+x boot.sh
-mv boot.* /
+mv boot.d/* /boot.d/
 
 chmod a+x entrypoint
 mv entrypoint /usr/local/bin/
