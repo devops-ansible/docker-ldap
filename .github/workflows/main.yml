@@ -8,9 +8,45 @@ on:
     - cron: '11 23 * * 0'
 
 jobs:
-  main:
+  test:
+    name:    Test the image
     runs-on: ubuntu-latest
+
     steps:
+
+      - uses: actions/checkout@v2
+
+      - name: build testing image
+        run: docker build -t devopsansiblede/ldap:testing .
+
+      - name: Running the testing image and waiting for 60 seconds to ensure the configuration took place
+        run: |
+          docker run --name ldap_test -d --rm \
+                 -e LDAP_ADMIN_PW="321padL" \
+                 -e LDAP_CONFIG_PW="Ldap123" \
+                 -e LDAP_DOMAIN="example.com" \
+                 devopsansiblede/ldap:testing && \
+          sleep 60
+
+      - name: check basic ldap search in testing container
+        id:   image_test
+        run: |
+          docker exec -t ldap_test bash -c \
+                 "ldapsearch -x -b \"dc=example,dc=com\" \
+                             -D \"cn=admin,dc=example,dc=com\" \
+                             -w \"\$LDAP_ADMIN_PW\""
+
+      - name: Clean up test
+        run:  docker stop ldap_test
+
+  release:
+    name:    Build image
+    runs-on: ubuntu-latest
+    needs:   test
+
+    steps:
+
+      - uses: actions/checkout@v2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -25,8 +61,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push latest
-        id: docker_build
+        id: docker_push
         uses: docker/build-push-action@v2
         with:
-          push: true
-          tags: devopsansiblede/ldap:latest
+          platforms: linux/amd64,linux/arm64
+          push:      true
+          tags:      devopsansiblede/ldap:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_push.outputs.digest }}
