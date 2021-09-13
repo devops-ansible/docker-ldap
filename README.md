@@ -41,3 +41,7 @@ docker run -d -p 389:127.0.0.1:389 -p 636:636 -v $PWD/data/database:/var/lib/lda
 * `/import/config.ldif` - Text file containing the exported config tree _(`${IMPORT_DIR}${IMPORT_CONFIG_FILE}`)_
 * `/import/data.ldif` - Text file containing the exported data tree _(`${IMPORT_DIR}${IMPORT_DATA_FILE}`)_
 * `/etc/defaults/slapd` - Slapd startup configuration
+
+## last built
+
+0000-00-00 00:00:00
