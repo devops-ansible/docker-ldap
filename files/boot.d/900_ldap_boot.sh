@@ -1,26 +1,13 @@
 #!/usr/bin/env bash
 
-export LDAP_USER="${LDAP_USER:-openldap}"
-export LDAP_GROUP="${LDAP_GROUP:-openldap}"
-export LDAP_PORT="${LDAP_PORT:-389}"
-export LDAPS_PORT="${LDAPS_PORT:-}"
-
-export IMPORT_DIR="${IMPORT_DIR:-/import/}"
-export IMPORT_CONFIG_FILE="${IMPORT_CONFIG_FILE:-config.ldif}"
-export IMPORT_DATA_FILE="${IMPORT_DATA_FILE:-data.ldif}"
-
-export LOG_LEVEL="${LOG_LEVEL:-16384}"
-export DATE_FORMAT="${DATE_FORMAT:-+%Y%m%d-%H%M%S}"
-
-export FORCE_RECONFIGURE="${FORCE_RECONFIGURE:-false}"
-export LDAP_BACKEND=${LDAP_BACKEND:-MDB}
+set -e
 
 config_db=${IMPORT_DIR}${IMPORT_CONFIG_FILE}
 data_db=${IMPORT_DIR}${IMPORT_DATA_FILE}
 
 # import config
 if [ -e ${config_db} ]; then
-    echo -en '   ... import config db'
+    echo -en '\033[1;37;44m   ... import config db \033[0m'
     # clean up existing config
     rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*
     # import config
@@ -33,7 +20,7 @@ fi
 
 # import data
 if [ -e ${data_db} ]; then
-    echo -en '   ... import data db'
+    echo -en '\033[1;37;44m   ... import data db \033[0m'
     # clean up existing data
     rm -rf /var/lib/ldap/*
     # import data
@@ -62,6 +49,8 @@ if [ ! "$(ls -A /etc/ldap/slapd.d)" ] || [[ "${FORCE_RECONFIGURE}" == "true" ]];
         exit 1
     fi
 
+    echo -e '\033[1;42;97m Now starting configuration of slapd \033[0m'
+
     # now configure the SLAPD
     cat <<EOF | debconf-set-selections
         slapd slapd/internal/generated_adminpw password ${LDAP_ADMIN_PW}
@@ -81,7 +70,7 @@ EOF
     dpkg-reconfigure -f noninteractive slapd >/dev/null 2>&1
 
     # configure BaseDN
-    if [ -n ${LDAP_BASEDN+x} ]; then
+    if [ ! -z ${LDAP_BASEDN+x} ]; then
         basedn="${LDAP_BASEDN}"
     else
         dc=""
@@ -89,14 +78,19 @@ EOF
         for dc_e in "${dc_elements[@]}"; do
             dc="${dc},dc=${dc_e}"
         done
+        basedn="${dc:1}"
     fi
-    basedn="BASE ${dc:1}"
+
+    echo -e "\033[1;37;44m   ... BaseDN retrieved as \"${basedn}\" \033[0m"
+
+    basedn="BASE ${basedn}"
     sed -i "s/^#BASE.*/${basedn}/g" /etc/ldap/ldap.conf
 
     # set configuration password
     tmpfile="/tmp/tmp.ldif"
-    if [ -n ${LDAP_CONFIG_PW+x} ]; then
-        password_hash=`slappasswd -s "${LDAP_CONFIG_PW}"`
+    if [ ! -z ${LDAP_CONFIG_PW+x} ]; then
+        echo -e '\033[1;37;44m   ... set config password \033[0m'
+        password_hash=$( slappasswd -s "${LDAP_CONFIG_PW}" )
         encode_pw=${password_hash//\//\\\/}
 
         slapcat -n0 -F /etc/ldap/slapd.d -l ${tmpfile}
@@ -107,7 +101,8 @@ EOF
     fi
 
     # register schemas
-    if [ -n ${ADDITIONAL_SCHEMAS+x} ]; then
+    if [ ! -z ${ADDITIONAL_SCHEMAS+x} ]; then
+        echo -e '\033[1;37;44m   ... register additional schemas \033[0m'
         IFS=","; declare -a schemas=($ADDITIONAL_SCHEMAS); unset IFS
 
         for schema in "${schemas[@]}"; do
@@ -116,24 +111,25 @@ EOF
     fi
 
     # register modules
-    if [ -n ${ADDITIONAL_MODULES+x} ]; then
+    if [ ! -z ${ADDITIONAL_MODULES+x} ]; then
+        echo -e '\033[1;37;44m   ... register additional modules \033[0m'
         IFS=","; declare -a modules=($ADDITIONAL_MODULES); unset IFS
 
         for module in "${modules[@]}"; do
-             mfile="/etc/ldap/modules/${module}.ldif"
+            mfile="/etc/ldap/modules/${module}.ldif"
 
-             if [ "$module" == 'ppolicy' ]; then
-                 PPOLICY_DN_PREFIX="${PPOLICY_DN_PREFIX:-cn=default,ou=policies}"
+            if [ "$module" == 'ppolicy' ]; then
+                PPOLICY_DN_PREFIX="${PPOLICY_DN_PREFIX:-cn=default,ou=policies}"
 
-                 sed -i "s/\(olcPPolicyDefault: \)PPOLICY_DN/\1${PPOLICY_DN_PREFIX}$dc_string/g" ${mfile}
-             fi
+                sed -i "s/\(olcPPolicyDefault: \)PPOLICY_DN/\1${PPOLICY_DN_PREFIX}$dc_string/g" ${mfile}
+            fi
 
-             slapadd -n0 -F /etc/ldap/slapd.d -l "${mfile}"
+            slapadd -n0 -F /etc/ldap/slapd.d -l "${mfile}"
         done
     fi
 
 else
-    echo -e "\e[1;42;97m Already configured – nothing to do. \e[0m"
+    echo -e "\033[1;42;97m Already configured – nothing to do. \e[0m"
 fi
 
 # set services
@@ -147,6 +143,8 @@ if [ ${#LDAP_PORT} -gt 0 ]; then
     LDAP_SERVICES="${LDAP_SERVICES} ldap://*:${LDAP_PORT}/"
 fi
 export LDAP_SERVICES
+echo -e "\033[1;42;97m Listening via those services: ${LDAP_SERVICES} \033[0m"
 
 # Set rights before startup
+echo -e '\033[1;42;97m Change file ownership so LDAP user can work with them \033[0m'
 chown -R ${LDAP_USER}:${LDAP_GROUP} /var/lib/ldap /etc/ldap/slapd.d &

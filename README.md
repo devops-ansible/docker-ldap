@@ -8,7 +8,7 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | --------------------- | --------------------- |:------------------:| ----------- |
 | `LDAP_PORT`           | `389`                 | yes                | port for LDAP to listen – unencrypted |
 | `LDAPS_PORT`          |                       | yes                | port for LDAP to listen – SSL encrypted; not to be confused with STARTLS |
-| `LOG_LEVEL`           | `16384`               | no                 | log level for the slapd |
+| `LDAP_LOGLEVEL`       | `16384`               | no                 | log level for the slapd; see [table 5.1 in OpenLDAP documentation](https://www.openldap.org/doc/admin24/slapdconf2.html#olcLogLevel:%20%3Clevel%3E) |
 | `IMPORT_DIR`          | `"/import/"`          | no                 ||
 | `IMPORT_CONFIG_FILE`  | `"config.ldif"`       | no                 ||
 | `IMPORT_DATA_FILE`    | `"data.ldif"`         | no                 ||

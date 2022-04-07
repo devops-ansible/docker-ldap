@@ -1,16 +1,36 @@
-FROM devopsansiblede/baseimage:latest
+ARG IMAGE=devopsansiblede/baseimage
+ARG VERSION=latest
+
+FROM ${IMAGE}:${VERSION}
 
 MAINTAINER macwinnie <dev@macwinnie.me>
 
-ENV REFRESHED_AT 2021-01-16
+ENV LDAP_USER          "openldap"
+ENV LDAP_GROUP         "openldap"
+ENV LDAP_PORT          "389"
+ENV LDAPS_PORT         ""
+ENV LDAP_DOMAIN        "example.com"
 
-COPY files/ /DockerInstall/
+ENV IMPORT_DIR         "/import/"
+ENV IMPORT_CONFIG_FILE "config.ldif"
+ENV IMPORT_DATA_FILE   "data.ldif"
 
-RUN chmod +x /DockerInstall/install.sh && \
-    /DockerInstall/install.sh
+ENV LDAP_BACKEND       "MDB"
+ENV LDAP_LOGLEVEL      "16384"
+ENV DATE_FORMAT        "+%Y%m%d-%H%M%S"
+
+ENV FORCE_RECONFIGURE  "false"
+
+ARG INSTALLDIR="/usr/src/install"
+
+COPY    files/ ${INSTALLDIR}/
+WORKDIR        ${INSTALLDIR}
+
+RUN chmod +x ./install.sh && \
+    ./install.sh && \
+    rm -rf ${INSTALLDIR}
 
 WORKDIR /etc/ldap/slapd.d
 
 ENTRYPOINT [ "entrypoint"]
-# we need `sh` since environmental variables are only evaluated within a shell in Docker ...
-CMD [ "sh", "-c", "/usr/sbin/slapd -h \"${LDAP_SERVICES}\" -g \"${LDAP_GROUP}\" -u \"${LDAP_USER}\" -F \"/etc/ldap/slapd.d\" -d \"${LOG_LEVEL}\"" ]
+CMD [ "start" ]

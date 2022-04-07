@@ -1,7 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# since especially the `900_ldap_boot.sh` does export
+# env vars, we need to source the `/boot.sh`.
 source /boot.sh
 
 set -e
 
-exec "$@"
+# if given CMD is `start` do
+if [ "$1" == "start" ]; then
+    # do the regular LDAP startup
+    /usr/sbin/slapd -h "${LDAP_SERVICES}" \
+                    -g "${LDAP_GROUP}" \
+                    -u "${LDAP_USER}" \
+                    -F "/etc/ldap/slapd.d" \
+                    -d "${LDAP_LOGLEVEL}"
+
+else
+    # another CMD was given, so the container will execute that one
+    exec "$@"
+fi
