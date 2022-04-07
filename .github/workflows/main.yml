@@ -9,6 +9,11 @@ on:
   # schedule:
   #   - cron: '11 23 * * 0'
 
+env:
+  IMAGE_NAME:     "devopsansiblede/ldap"
+  TAG_PRODUCTION: "latest"
+  TAG_TESTING:    "testing"
+
 jobs:
   test:
     name:    Test the image
@@ -16,27 +21,25 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: build testing image
-        run: docker build -t devopsansiblede/ldap:testing .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and keep testing image locally
+        id: build_docker_test
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load:    true
+          tags:    "${{ env.IMAGE_NAME }}:${{ env.TAG_TESTING }}"
 
       - name: Running the testing image and waiting for 60 seconds to ensure the configuration took place
-        run: |
-          docker run --name ldap_test -d --rm \
-                 -e LDAP_ADMIN_PW="321padL" \
-                 -e LDAP_CONFIG_PW="Ldap123" \
-                 -e LDAP_DOMAIN="example.com" \
-                 devopsansiblede/ldap:testing && \
-          sleep 60
-
-      - name: check basic ldap search in testing container
         id:   image_test
         run: |
-          docker exec -t ldap_test bash -c \
-                 "ldapsearch -x -b \"dc=example,dc=com\" \
-                             -D \"cn=admin,dc=example,dc=com\" \
-                             -w \"\$LDAP_ADMIN_PW\""
+          docker run --name ldap_test -d --rm \
+                 ${{ env.IMAGE_NAME }}:${{ env.TAG_TESTING }} test
 
       - name: Clean up test
         run:  docker stop ldap_test
@@ -48,7 +51,8 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -68,7 +72,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push:      true
-          tags:      devopsansiblede/ldap:latest
+          tags:      "${{ env.IMAGE_NAME }}:${{ env.TAG_PRODUCTION }}"
 
       - name: Image digest
         run: echo ${{ steps.docker_push.outputs.digest }}

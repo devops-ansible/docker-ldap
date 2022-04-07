@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd ${SCRIPT_PATH}
 
@@ -8,8 +10,6 @@ mv boot.d/* /boot.d/
 chmod a+x entrypoint
 mv entrypoint /usr/local/bin/
 
-mv templates /
-
 apt-get update -q --fix-missing
 apt-get install -yq --no-install-recommends \
     slapd \
@@ -17,6 +17,19 @@ apt-get install -yq --no-install-recommends \
     db-util
 
 pip install j2cli
+
+BUILD_ARG_TESTING=$( echo "${BUILD_ARG_TESTING}" | tr '[:upper:]' '[:lower:]' )
+if [ "${BUILD_ARG_TESTING}" = "true" ] || [ "${BUILD_ARG_TESTING}" = "yes" ]; then
+    # testing cases are requested, so keep them
+    mv ./test /ldap_testing
+    # initiate BATS by fetching the resources
+    git clone https://github.com/bats-core/bats-core.git    "${TESTS_PATH}/bats"
+    git clone https://github.com/bats-core/bats-support.git "${TESTS_PATH}/test_helper/bats-support"
+    git clone https://github.com/bats-core/bats-assert.git  "${TESTS_PATH}/test_helper/bats-assert"
+else
+    # BATS is not initiated, so we should not extend the system PATH variable
+    rm -f /boot.d/*_bats_*.sh
+fi
 
 # perform installation cleanup
 apt-get -y clean

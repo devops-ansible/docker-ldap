@@ -1,9 +1,17 @@
-ARG IMAGE=devopsansiblede/baseimage
-ARG VERSION=latest
+ARG BASE_IMAGE=devopsansiblede/baseimage
+ARG BASE_VERSION=latest
 
-FROM ${IMAGE}:${VERSION}
+FROM ${BASE_IMAGE}:${BASE_VERSION}
 
 MAINTAINER macwinnie <dev@macwinnie.me>
+
+# VOLUME  /etc/ldap/slapd.d   /var/lib/ldap
+WORKDIR /etc/ldap/slapd.d
+
+ARG INSTALLDIR="/usr/src/install"
+ARG BUILD_ARG_TESTING="no"
+
+ENV TESTS_PATH         "/ldap_testing"
 
 ENV LDAP_USER          "openldap"
 ENV LDAP_GROUP         "openldap"
@@ -21,16 +29,11 @@ ENV DATE_FORMAT        "+%Y%m%d-%H%M%S"
 
 ENV FORCE_RECONFIGURE  "false"
 
-ARG INSTALLDIR="/usr/src/install"
+COPY files/ ${INSTALLDIR}/
 
-COPY    files/ ${INSTALLDIR}/
-WORKDIR        ${INSTALLDIR}
-
-RUN chmod +x ./install.sh && \
-    ./install.sh && \
-    rm -rf ${INSTALLDIR}
-
-WORKDIR /etc/ldap/slapd.d
+RUN  chmod +x ${INSTALLDIR}/install.sh && \
+     ${INSTALLDIR}/install.sh && \
+     rm -rf ${INSTALLDIR}
 
 ENTRYPOINT [ "entrypoint"]
 CMD [ "start" ]

@@ -1,21 +1,40 @@
 #!/usr/bin/env bash
 
-# since especially the `900_ldap_boot.sh` does export
-# env vars, we need to source the `/boot.sh`.
-source /boot.sh
-
+# kill script when error occurs
 set -e
 
-# if given CMD is `start` do
-if [ "$1" == "start" ]; then
-    # do the regular LDAP startup
-    /usr/sbin/slapd -h "${LDAP_SERVICES}" \
-                    -g "${LDAP_GROUP}" \
-                    -u "${LDAP_USER}" \
-                    -F "/etc/ldap/slapd.d" \
-                    -d "${LDAP_LOGLEVEL}"
+# if starting with test mode, run testing
+if [ "${1}" == "test" ]; then
 
+    export PATH="${PATH}:${TESTS_PATH}/bats/bin/"
+    cd "${TESTS_PATH}"
+    bats ./test.bats
+
+# in any other case do regular startup
 else
-    # another CMD was given, so the container will execute that one
-    exec "$@"
+
+    if { ! [ -z ${TESTRUN+x} ];  } && { ! [ "${TESTRUN}" = "true" ]; } && { ! [ "${TESTRUN}" = "yes" ]; } then
+        # Since especially the `900_ldap_boot.sh` does export
+        # env vars, we need to source the `/boot.sh`.
+        # For that, we also need to change back to working dir after
+        # running bootup tasks.
+        workingDir="$( pwd )"
+        source /boot.sh
+        cd "${workingDir}"
+    fi
+
+    # if given CMD is `start` do
+    if [ "${1}" == "start" ]; then
+        # do the regular LDAP startup in foreground for docker container
+        # to stay alive – for that, the loglevel has to be defined.
+        /usr/sbin/slapd -h "${LDAP_SERVICES}" \
+                        -g "${LDAP_GROUP}" \
+                        -u "${LDAP_USER}" \
+                        -F "/etc/ldap/slapd.d" \
+                        -d "${LDAP_LOGLEVEL}"
+
+    else
+        # another CMD was given, so the container will execute that one
+        exec "$@"
+    fi
 fi

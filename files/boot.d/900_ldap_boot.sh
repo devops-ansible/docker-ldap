@@ -135,11 +135,11 @@ fi
 # set services
 LDAP_SERVICES="ldapi:///"
 if [ ${#LDAPS_PORT} -gt 0 ]; then
-    echo "LDAPS: (${#LDAPS_PORT}) \"${LDAPS_PORT}\""
+    echo -e "\033[1;42;97m Listening on port ${LDAPS_PORT} for LDAPS ... \033[0m"
     LDAP_SERVICES="${LDAP_SERVICES} ldaps://*:${LDAPS_PORT}/"
 fi
 if [ ${#LDAP_PORT} -gt 0 ]; then
-    echo "LDAP:  \"${LDAP_PORT}\""
+    echo -e "\033[1;42;97m Listening on port ${LDAP_PORT} for LDAP ... \033[0m"
     LDAP_SERVICES="${LDAP_SERVICES} ldap://*:${LDAP_PORT}/"
 fi
 export LDAP_SERVICES
