@@ -1,11 +1,13 @@
+---
+
 name: Build this Docker image
 on:
   workflow_dispatch:
   repository_dispatch:
   push:
     branches: master
-  schedule:
-    - cron: '11 23 * * 0'
+  # schedule:
+  #   - cron: '11 23 * * 0'
 
 jobs:
   test:
@@ -80,3 +82,5 @@ jobs:
           commit_message: Last built
           commit_user_name: GitHub Actions
           commit_user_email: dev@macwinnie.me
+
+...
