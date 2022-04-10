@@ -12,8 +12,10 @@ mv entrypoint /usr/local/bin/
 
 apt-get update -q --fix-missing
 apt-get install -yq --no-install-recommends \
-    slapd \
+    libsasl2-modules libsasl2-modules-db libsasl2-modules-gssapi-mit libsasl2-modules-ldap libsasl2-modules-otp libsasl2-modules-sql \
+    slapd slapd-contrib \
     ldap-utils \
+    krb5-kdc-ldap \
     db-util
 
 pip install j2cli

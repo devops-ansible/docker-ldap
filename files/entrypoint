@@ -3,6 +3,8 @@
 # kill script when error occurs
 set -e
 
+ulimit -n ${LDAP_ULIMIT}
+
 # if starting with test mode, run testing
 if [ "${1}" == "test" ]; then
 

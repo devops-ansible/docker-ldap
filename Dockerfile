@@ -18,13 +18,14 @@ ENV LDAP_GROUP         "openldap"
 ENV LDAP_PORT          "389"
 ENV LDAPS_PORT         ""
 ENV LDAP_DOMAIN        "example.com"
+ENV LDAP_BACKEND       "MDB"
+ENV LDAP_LOGLEVEL      "16384"
+ENV LDAP_ULIMIT        "1024"
 
 ENV IMPORT_DIR         "/import/"
 ENV IMPORT_CONFIG_FILE "config.ldif"
 ENV IMPORT_DATA_FILE   "data.ldif"
 
-ENV LDAP_BACKEND       "MDB"
-ENV LDAP_LOGLEVEL      "16384"
 ENV DATE_FORMAT        "+%Y%m%d-%H%M%S"
 
 ENV FORCE_RECONFIGURE  "false"
