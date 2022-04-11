@@ -16,7 +16,8 @@ apt-get install -yq --no-install-recommends \
     slapd slapd-contrib \
     ldap-utils \
     krb5-kdc-ldap \
-    db-util
+    db-util \
+    lego
 
 pip install j2cli
 

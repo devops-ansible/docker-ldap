@@ -40,9 +40,12 @@ startLdap() {
 }
 
 stopLdap() {
-    echo -e "\033[1;90;106m Stopping LDAP service. \033[0m"
-    pid="$( pgrep slapd )"
+    echo -e "\033[1;90;106m Stopping entrypoint and so slapd service. \033[0m"
+    # `ps -ef` returns list of all processes running – with those columns:
+    # UID PID PPID C STIME TTY TIME CMD
+    # `awk` checks `CMD` is `entrypoint start`. Assuming there `entrypoint start` did only run once.
+    pidv="$( ps -ef | awk '{if ( $9 ~ "entrypoint" && $10 == "start" ) print $2}' )"
     if [ "$?" -eq 0 ]; then
-        kill ${pid}
+        kill ${pidv}
     fi
 }

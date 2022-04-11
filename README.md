@@ -16,12 +16,18 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `LDAP_CONFIG_PW`      | **mandatory** when initiating db | yes     | plain text password for configuration |
 | `LDAP_DOMAIN`         | **mandatory** when initiating db | yes     ||
 | `LDAP_BASEDN`         | DN derived from `LDAP_DOMAIN` | no         | you may define a custom BaseDN for your LDAP – but by default, it would be derived from `LDAP_DOMAIN` |
-| `LDAP_ORGANISATION`   | `LDAP_DOMAIN`          | yes               | Organisation name of a new LDAP instance |
-| `LDAP_BACKEND`        | `MDB`                  | no                | Backend Type |
-| `LDAP_ULIMIT`         | `1024`                 | no                | Reduce maximum number of number of open file descriptors to 1024, see [Bug report](https://github.com/docker/docker/issues/8231) |
-| `ADDITIONAL_MODULES`  |                        | yes               | comma separated list of modules to be enabled |
-| `ADDITIONAL_SCHEMAS`  |                        | yes               | comma separated list of schemas to be enabled |
-| `TESTRUN`             |                        | no                | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
+| `LDAP_ORGANISATION`   | `LDAP_DOMAIN`         | yes                | Organisation name of a new LDAP instance |
+| `LDAP_BACKEND`        | `MDB`                 | no                 | Backend Type |
+| `LDAP_ULIMIT`         | `1024`                | no                 | Reduce maximum number of number of open file descriptors to 1024, see [Bug report](https://github.com/docker/docker/issues/8231) |
+| `ADDITIONAL_MODULES`  |                       | yes                | comma separated list of modules to be enabled |
+| `ADDITIONAL_SCHEMAS`  |                       | yes                | comma separated list of schemas to be enabled |
+| `TESTRUN`             |                       | no                 | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
+| `LEGO_ACCOUNT_EMAIL`  |                       | yes                |  |
+| `LEGO_CERT_DOMAIN`    |                       | yes                |  |
+
+**For the usage of LEGO DNS challenge, you'll have to use the environmental variables needed for your DNS provider. You can find that configuration [within LEGO documentation](https://go-acme.github.io/lego/dns/).**
+
+This Docker image only supports DNS challenge, since ports 443 / 80 won't be exposed / published / used. We highly recommend to stay with DNS challenge.
 
 ### building and testing variables
 

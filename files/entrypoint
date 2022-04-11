@@ -4,18 +4,20 @@
 set -e
 
 ulimit -n ${LDAP_ULIMIT}
+export EP_PID=$$
+export ep_lockfile="/entrypoint.lock"
 
 # if starting with test mode, run testing
 if [ "${1}" == "test" ]; then
 
     export PATH="${PATH}:${TESTS_PATH}/bats/bin/"
     cd "${TESTS_PATH}"
-    bats ./test.bats
+    bats --trace ./test.bats
 
 # in any other case do regular startup
 else
 
-    if { ! [ -z ${TESTRUN+x} ];  } && { ! [ "${TESTRUN}" = "true" ]; } && { ! [ "${TESTRUN}" = "yes" ]; } then
+    if { [ -z ${TESTRUN+x} ];  } || { { ! [ "${TESTRUN}" = "true" ]; } && { ! [ "${TESTRUN}" = "yes" ]; } } then
         # Since especially the `900_ldap_boot.sh` does export
         # env vars, we need to source the `/boot.sh`.
         # For that, we also need to change back to working dir after
@@ -27,13 +29,56 @@ else
 
     # if given CMD is `start` do
     if [ "${1}" == "start" ]; then
+
+        if [ -f "${ep_lockfile}" ]; then
+            echo -e "\033[1;30;41m \`entrypoint start\` may only be run once at a time ... \033[0m"
+            exit 1
+        fi
+
+        touch "${ep_lockfile}"
+
+        _slapdPid() {
+            slapdPid="$( pgrep slapd )"
+            if [ "$?" -eq 0 ]; then
+                echo "${slapdPid}"
+            else
+                return 1
+            fi
+        }
+
+        _term() {
+            rm -f "${ep_lockfile}"
+            slapdPid="$( _slapdPid )"
+            if [ "$?" -eq 0 ]; then
+                # clean termination of slapd
+                kill -TERM "${slapdPid}" 2&> /dev/null
+            fi
+            # wait until slapd has ended
+            _slapdPid
+            while [ "$?" == 0 ]; do
+                _slapdPid
+            done
+            # return TERM exit code
+            exit 143; # 128 + 15 -- SIGTERM
+        }
+
         # do the regular LDAP startup in foreground for docker container
         # to stay alive – for that, the loglevel has to be defined.
         /usr/sbin/slapd -h "${LDAP_SERVICES}" \
                         -g "${LDAP_GROUP}" \
                         -u "${LDAP_USER}" \
                         -F "/etc/ldap/slapd.d" \
-                        -d "${LDAP_LOGLEVEL}"
+                        -d "${LDAP_LOGLEVEL}" &
+
+        slapdPid=$!
+        echo -e "\033[1;30;41m SLAPD started with PID ${slapdPid} \033[0m"
+
+        # clean handling of termination signals
+        # SIGKILL isn't handled cleanly ...
+        trap _term SIGTERM SIGINT SIGQUIT SIGHUP
+
+        # keep container / entrypoint running since slapd is running in the background
+        while true; do :; done
 
     else
         # another CMD was given, so the container will execute that one
