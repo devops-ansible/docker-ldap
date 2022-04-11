@@ -27,6 +27,7 @@ ENV IMPORT_CONFIG_FILE "config.ldif"
 ENV IMPORT_DATA_FILE   "data.ldif"
 
 ENV DATE_FORMAT        "+%Y%m%d-%H%M%S"
+ENV RUNNING_CHECK      "60"
 
 ENV FORCE_RECONFIGURE  "false"
 

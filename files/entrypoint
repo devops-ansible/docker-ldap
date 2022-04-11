@@ -54,32 +54,46 @@ else
                 kill -TERM "${slapdPid}" 2&> /dev/null
             fi
             # wait until slapd has ended
-            _slapdPid
+            set +e # `_slapdPid` may return another rc then 0 ... so don't break the whole script here!
+            _slapdPid 1&> /dev/null
             while [ "$?" == 0 ]; do
-                _slapdPid
+                _slapdPid 1&> /dev/null
             done
+            set -e
             # return TERM exit code
-            exit 143; # 128 + 15 -- SIGTERM
+            exit 143 # 128 + 15 -- SIGTERM
         }
 
         # do the regular LDAP startup in foreground for docker container
         # to stay alive – for that, the loglevel has to be defined.
-        /usr/sbin/slapd -h "${LDAP_SERVICES}" \
-                        -g "${LDAP_GROUP}" \
-                        -u "${LDAP_USER}" \
-                        -F "/etc/ldap/slapd.d" \
-                        -d "${LDAP_LOGLEVEL}" &
-
-        slapdPid=$!
-        echo -e "\033[1;30;41m SLAPD started with PID ${slapdPid} \033[0m"
+        start_slapd &
 
         # clean handling of termination signals
         # SIGKILL isn't handled cleanly ...
         trap _term SIGTERM SIGINT SIGQUIT SIGHUP
 
-        # keep container / entrypoint running since slapd is running in the background
-        while true; do :; done
-
+        # keep slapd running – while true necessary since slapd
+        # is started as “background” process
+        while true; do
+            # wait for next check
+            sec="${RUNNING_CHECK}"
+            while [ ${sec} -ge 0 ]; do
+                # run within `while` loop for container being able to
+                # handle SIGTERM correctly in a timely manner
+                sleep 1
+                let "sec=sec-1"
+            done
+            # do the check if slapd still running
+            set +e # `_slapdPid` may return another rc then 0 ... so don't break the whole script here!
+            _slapdPid 1&> /dev/null
+            rc="$?"
+            set -e
+            # slapd has been stopped for some reason ... so now restart slapd
+            if [ "${rc}" -ne 0 ]; then
+                echo "rc was ${rc}"
+                start_slapd &
+            fi
+        done
     else
         # another CMD was given, so the container will execute that one
         exec "$@"

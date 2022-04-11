@@ -22,6 +22,7 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `ADDITIONAL_MODULES`  |                       | yes                | comma separated list of modules to be enabled |
 | `ADDITIONAL_SCHEMAS`  |                       | yes                | comma separated list of schemas to be enabled |
 | `TESTRUN`             |                       | no                 | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
+| `RUNNING_CHECK`       | `60`                  | no                 | all `x` seconds (value of this variable) the entrypoint run with CMD `start` will check if slapd still is running. |
 | `LEGO_ACCOUNT_EMAIL`  |                       | yes                |  |
 | `LEGO_CERT_DOMAIN`    |                       | yes                |  |
 
