@@ -38,11 +38,11 @@ if [ ! "$(ls -A /etc/ldap/slapd.d)" ] || [[ "${FORCE_RECONFIGURE}" == "true" ]];
 
     break=false
     if [ -z ${LDAP_ADMIN_PW+x} ]; then
-        echo -e "\e[1;41;30m ERROR: \e[0m ENV variable \e[1;42;33m LDAP_ADMIN_PW \e[0m not set, so we cannot initialize the LDAP."
+        echo -e "\033[1;41;30m ERROR: \033[0m ENV variable \033[1;42;33m LDAP_ADMIN_PW \033[0m not set, so we cannot initialize the LDAP."
         break=true
     fi
     if [ -z ${LDAP_DOMAIN+x} ]; then
-        echo -e "\e[1;41;30m ERROR: \e[0m ENV variable \e[1;42;33m LDAP_DOMAIN \e[0m not set, so we cannot initialize the LDAP."
+        echo -e "\033[1;41;30m ERROR: \033[0m ENV variable \033[1;42;33m LDAP_DOMAIN \033[0m not set, so we cannot initialize the LDAP."
         break=true
     fi
     if [[ "${break}" == "true" ]]; then
@@ -129,7 +129,7 @@ EOF
     fi
 
 else
-    echo -e "\033[1;42;97m Already configured – nothing to do. \e[0m"
+    echo -e "\033[1;42;97m Already configured – nothing to do. \033[0m"
 fi
 
 # set services
