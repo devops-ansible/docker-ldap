@@ -1,8 +1,7 @@
 {% if BUILD_ARG_TESTING in [ "yes", "true" ] %}if { [ -z ${TESTRUN+x} ];  } || { { ! [ "${TESTRUN}" = "true" ]; } && { ! [ "${TESTRUN}" = "yes" ]; } } then
-    {% filter indent( width=4 ) %}{% include "./_bootup.j2" %}{% endfilter %}
+    {% filter indent( width=4 ) %}{% include J2T_PATH ~ "_bootup.j2" %}{% endfilter %}
 fi
-{% else %}{% include "./_bootup.j2" %}{% endif %}
-
+{% else %}{% include J2T_PATH ~ "_bootup.j2" %}{% endif %}
 # if given CMD is `start` do
 if [ "${1}" == "start" ]; then
 
