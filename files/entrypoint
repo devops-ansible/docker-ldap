@@ -37,28 +37,9 @@ else
 
         touch "${ep_lockfile}"
 
-        _slapdPid() {
-            slapdPid="$( pgrep slapd )"
-            if [ "$?" -eq 0 ]; then
-                echo "${slapdPid}"
-            else
-                return 1
-            fi
-        }
-
         _term() {
             rm -f "${ep_lockfile}"
-            slapdPid="$( _slapdPid )"
-            if [ "$?" -eq 0 ]; then
-                # clean termination of slapd
-                kill -TERM "${slapdPid}" 2&> /dev/null
-            fi
-            # wait until slapd has ended
-            set +e # `_slapdPid` may return another rc then 0 ... so don't break the whole script here!
-            _slapdPid 1&> /dev/null
-            while [ "$?" == 0 ]; do
-                _slapdPid 1&> /dev/null
-            done
+            _termSlapd
             set -e
             # return TERM exit code
             exit 143 # 128 + 15 -- SIGTERM
@@ -67,6 +48,10 @@ else
         # do the regular LDAP startup in foreground for docker container
         # to stay alive – for that, the loglevel has to be defined.
         start_slapd &
+        subPID="$!" # retrieve PID of subprocess `start_slapd`
+        sleep 1
+        # since `slapd` is (the only) suprocess of `start_slapd`, we need to get its PID by `pgrep -P`
+        echo -e "\033[1;42;97m \`slapd\` started with PID $( pgrep -P ${subPID} ) \033[0m"
 
         # clean handling of termination signals
         # SIGKILL isn't handled cleanly ...
@@ -92,6 +77,9 @@ else
             if [ "${rc}" -ne 0 ]; then
                 # slapd has been stopped for some reason ... so now restart slapd
                 start_slapd &
+                subPID="$!"
+                sleep 1
+                echo -e "\033[1;39;43m \`slapd\` restarted with PID $( pgrep -P ${subPID} ) \033[0m"
             fi
         done
     else
