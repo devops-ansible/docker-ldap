@@ -72,6 +72,9 @@ else
         # SIGKILL isn't handled cleanly ...
         trap _term SIGTERM SIGINT SIGQUIT SIGHUP
 
+        # `_slapdPid` may return another rc then 0 within the loop ...
+        # we don't want to break the loop / the whole script through that ...
+        set +e
         # keep slapd running – while true necessary since slapd
         # is started as “background” process
         while true; do
@@ -84,13 +87,10 @@ else
                 let "sec=sec-1"
             done
             # do the check if slapd still running
-            set +e # `_slapdPid` may return another rc then 0 ... so don't break the whole script here!
             _slapdPid 1&> /dev/null
             rc="$?"
-            set -e
-            # slapd has been stopped for some reason ... so now restart slapd
             if [ "${rc}" -ne 0 ]; then
-                echo "rc was ${rc}"
+                # slapd has been stopped for some reason ... so now restart slapd
                 start_slapd &
             fi
         done
