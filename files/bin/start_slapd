@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# do the regular LDAP startup in foreground for docker container
+# to stay alive – for that, the loglevel has to be defined.
+
+/usr/sbin/slapd -h "${LDAP_SERVICES}" \
+                -g "${LDAP_GROUP}" \
+                -u "${LDAP_USER}" \
+                -F "/etc/ldap/slapd.d" \
+                -d "${LDAP_LOGLEVEL}"

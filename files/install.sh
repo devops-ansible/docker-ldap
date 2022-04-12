@@ -5,8 +5,10 @@ set -e
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd ${SCRIPT_PATH}
 
-mv boot.d/*   /boot.d/
-mv entrypoint /usr/local/bin/
+chmod a+x bin/*
+
+mv boot.d/* /boot.d/
+mv bin/*    /usr/local/bin/
 
 apt-get update -q --fix-missing
 apt-get install -yq --no-install-recommends \
@@ -39,55 +41,3 @@ apt-get -y autoremove
 rm -rf /var/lib/apt/lists/*
 
 rm -rf /etc/ldap/slapd.d/*
-
-cat <<'EOF' > /usr/local/bin/start_slapd
-#!/usr/bin/env bash
-
-# do the regular LDAP startup in foreground for docker container
-# to stay alive – for that, the loglevel has to be defined.
-
-/usr/sbin/slapd -h "${LDAP_SERVICES}" \
-                -g "${LDAP_GROUP}" \
-                -u "${LDAP_USER}" \
-                -F "/etc/ldap/slapd.d" \
-                -d "${LDAP_LOGLEVEL}"
-EOF
-
-cat <<'EOF' > /usr/local/bin/_slapdPid
-#!/usr/bin/env bash
-
-slapdPid="$( pgrep slapd )"
-if [ "$?" -eq 0 ]; then
-    echo "${slapdPid}"
-else
-    exit 1
-fi
-EOF
-
-cat <<'EOF' > /usr/local/bin/_termSlapd
-#!/usr/bin/env bash
-
-# `_slapdPid` may return another rc then 0
-# but we don't want to break here ...
-set +e
-
-# retrieve actual PID of slapd running
-slapdPid="$( _slapdPid )"
-if [ "$?" -eq 0 ]; then
-
-    # clean termination of slapd
-    kill -TERM "${slapdPid}" 2&> /dev/null
-
-    # wait until slapd has ended
-    _slapdPid 1&> /dev/null
-    while [ "$?" == 0 ]; do
-        _slapdPid 1&> /dev/null
-    done
-fi
-exit 0
-EOF
-
-chmod a+x /usr/local/bin/entrypoint \
-          /usr/local/bin/start_slapd \
-          /usr/local/bin/_slapdPid \
-          /usr/local/bin/_termSlapd

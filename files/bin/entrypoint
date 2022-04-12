@@ -12,7 +12,7 @@ if [ "${1}" == "test" ]; then
 
     export PATH="${PATH}:${TESTS_PATH}/bats/bin/"
     cd "${TESTS_PATH}"
-    bats --trace ./test.bats
+    bats ./test.bats
 
 # in any other case do regular startup
 else
