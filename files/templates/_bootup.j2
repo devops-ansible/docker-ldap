@@ -1,0 +1,7 @@
+# Since especially the `900_ldap_boot.sh` does export
+# env vars, we need to source the `/boot.sh`.
+# For that, we also need to change back to working dir after
+# running bootup tasks.
+workingDir="$( pwd )"
+source /boot.sh
+cd "${workingDir}"

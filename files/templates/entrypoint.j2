@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# kill script when error occurs
+set -e
+
+ulimit -n ${LDAP_ULIMIT}
+export EP_PID=$$
+export ep_lockfile="/entrypoint.lock"
+
+{% if BUILD_ARG_TESTING in [ "yes", "true" ] -%}
+# if starting with test mode, run testing
+if [ "${1}" == "test" ]; then
+
+    export PATH="${PATH}:${TESTS_PATH}/bats/bin/"
+    cd "${TESTS_PATH}"
+    bats ./test.bats
+
+# in any other case do regular startup
+else
+
+    {% filter indent( width=4 ) %}{% include "./_regular_entry.j2" %}{% endfilter %}
+fi
+{% else %}{% include "./_regular_entry.j2" %}{% endif %}

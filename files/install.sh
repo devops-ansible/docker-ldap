@@ -5,11 +5,6 @@ set -e
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd ${SCRIPT_PATH}
 
-chmod a+x bin/*
-
-mv boot.d/* /boot.d/
-mv bin/*    /usr/local/bin/
-
 apt-get update -q --fix-missing
 apt-get install -yq --no-install-recommends \
     libsasl2-modules libsasl2-modules-db libsasl2-modules-gssapi-mit libsasl2-modules-ldap libsasl2-modules-otp libsasl2-modules-sql \
@@ -21,7 +16,18 @@ apt-get install -yq --no-install-recommends \
 
 pip install j2cli
 
-BUILD_ARG_TESTING=$( echo "${BUILD_ARG_TESTING}" | tr '[:upper:]' '[:lower:]' )
+export BUILD_ARG_TESTING="$( echo "${BUILD_ARG_TESTING}" | tr '[:upper:]' '[:lower:]' )"
+
+cpwd="$( pwd )"
+cd templates/
+j2 ./entrypoint.j2 -o "${cpwd}/bin/entrypoint"
+cd "${cpwd}"
+
+chmod a+x bin/*
+
+mv boot.d/* /boot.d/
+mv bin/*    /usr/local/bin/
+
 if [ "${BUILD_ARG_TESTING}" = "true" ] || [ "${BUILD_ARG_TESTING}" = "yes" ]; then
     # testing cases are requested, so keep them
     mv ./test /ldap_testing

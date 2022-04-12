@@ -1,0 +1,64 @@
+{% if BUILD_ARG_TESTING in [ "yes", "true" ] %}if { [ -z ${TESTRUN+x} ];  } || { { ! [ "${TESTRUN}" = "true" ]; } && { ! [ "${TESTRUN}" = "yes" ]; } } then
+    {% filter indent( width=4 ) %}{% include "./_bootup.j2" %}{% endfilter %}
+fi
+{% else %}{% include "./_bootup.j2" %}{% endif %}
+
+# if given CMD is `start` do
+if [ "${1}" == "start" ]; then
+
+    if [ -f "${ep_lockfile}" ]; then
+        echo -e "\033[1;30;41m \`entrypoint start\` may only be run once at a time ... \033[0m"
+        exit 1
+    fi
+
+    touch "${ep_lockfile}"
+
+    _term() {
+        rm -f "${ep_lockfile}"
+        _termSlapd
+        set -e
+        # return TERM exit code
+        exit 143 # 128 + 15 -- SIGTERM
+    }
+
+    # do the regular LDAP startup in foreground for docker container
+    # to stay alive – for that, the loglevel has to be defined.
+    start_slapd &
+    subPID="$!" # retrieve PID of subprocess `start_slapd`
+    sleep 1
+    # since `slapd` is (the only) suprocess of `start_slapd`, we need to get its PID by `pgrep -P`
+    echo -e "\033[1;42;97m \`slapd\` started with PID $( pgrep -P ${subPID} ) \033[0m"
+
+    # clean handling of termination signals
+    # SIGKILL isn't handled cleanly ...
+    trap _term SIGTERM SIGINT SIGQUIT SIGHUP
+
+    # `_slapdPid` may return another rc then 0 within the loop ...
+    # we don't want to break the loop / the whole script through that ...
+    set +e
+    # keep slapd running – while true necessary since slapd
+    # is started as “background” process
+    while true; do
+        # wait for next check
+        sec="${RUNNING_CHECK}"
+        while [ ${sec} -ge 0 ]; do
+            # run within `while` loop for container being able to
+            # handle SIGTERM correctly in a timely manner
+            sleep 1
+            let "sec=sec-1"
+        done
+        # do the check if slapd still running
+        _slapdPid 1&> /dev/null
+        rc="$?"
+        if [ "${rc}" -ne 0 ]; then
+            # slapd has been stopped for some reason ... so now restart slapd
+            start_slapd &
+            subPID="$!"
+            sleep 1
+            echo -e "\033[1;39;43m \`slapd\` restarted with PID $( pgrep -P ${subPID} ) \033[0m"
+        fi
+    done
+else
+    # another CMD was given, so the container will execute that one
+    exec "$@"
+fi
