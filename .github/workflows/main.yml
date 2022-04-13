@@ -39,6 +39,7 @@ jobs:
         id:   image_test
         run: |
           docker run --name ldap_test -d --rm \
+                 -e LEGO_TEST_CONFIG='${{ secrets.LEGO_TEST_CONFIG }}' \
                  ${{ env.IMAGE_NAME }}:${{ env.TAG_TESTING }} test
 
       - name: Clean up test
