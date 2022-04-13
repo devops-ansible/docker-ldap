@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [ ! -z ${1+x} ] && [ "$( echo "${1}" | tr '[:upper:]' '[:lower:]' )" = "test" ]; then
+    echo 'running staging lego challenge'
+    lego --path="${LEGO_PATH:-/lego}" \
+         --email="${LEGO_ACCOUNT_EMAIL}" \
+         --domains="${LEGO_CERT_DOMAIN}" \
+         --dns="${LEGO_DNS_PROVIDER}" \
+         --dns.resolvers="${LEGO_DNS_RESOLVERS:-208.67.222.222:53}" \
+         --accept-tos \
+         --server=https://acme-staging-v02.api.letsencrypt.org/directory  \
+         run
+else
+    echo 'running productive lego challenge'
+    lego --path="${LEGO_PATH:-/lego}" \
+         --email="${LEGO_ACCOUNT_EMAIL}" \
+         --domains="${LEGO_CERT_DOMAIN}" \
+         --dns="${LEGO_DNS_PROVIDER}" \
+         --dns.resolvers="${LEGO_DNS_RESOLVERS:-208.67.222.222:53}" \
+         --accept-tos \
+         run
+fi

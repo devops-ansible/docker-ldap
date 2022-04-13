@@ -49,3 +49,7 @@ stopLdap() {
         kill ${pidv}
     fi
 }
+
+teardownLego() {
+    rm -rf "${LEGO_PATH:-/lego}"
+}
