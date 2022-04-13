@@ -45,6 +45,7 @@ if [ ! "$(ls -A /etc/ldap/slapd.d)" ] || [[ "${FORCE_RECONFIGURE}" == "true" ]];
         echo -e "\033[1;41;30m ERROR: \033[0m ENV variable \033[1;42;33m LDAP_DOMAIN \033[0m not set, so we cannot initialize the LDAP."
         break=true
     fi
+    # check both manadtory variables and only break the container startup if one of them or both are unset
     if [[ "${break}" == "true" ]]; then
         exit 1
     fi
@@ -78,6 +79,7 @@ EOF
         for dc_e in "${dc_elements[@]}"; do
             dc="${dc},dc=${dc_e}"
         done
+        # the first character is a `,` – that has to be omitted
         basedn="${dc:1}"
     fi
 

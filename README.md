@@ -22,7 +22,7 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `ADDITIONAL_MODULES`  |                       | yes                | comma separated list of modules to be enabled |
 | `ADDITIONAL_SCHEMAS`  |                       | yes                | comma separated list of schemas to be enabled |
 | `TESTRUN`             |                       | no                 | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
-| `RUNNING_CHECK`       | `60`                  | no                 | all `x` seconds (value of this variable) the entrypoint run with CMD `start` will check if slapd still is running. |
+| `RUNNING_CHECK`       | `30`                  | no                 | all `x` seconds (value of this variable) the entrypoint run with CMD `start` will check if slapd still is running. |
 | `LEGO_ACCOUNT_EMAIL`  |                       | yes                |  |
 | `LEGO_CERT_DOMAIN`    |                       | yes                |  |
 
@@ -47,12 +47,24 @@ Docker uses build arguments (type `ARG`) for environmental variables only availa
 
 ## Usage
 
+### LEGO for Let's Encrypt certificates
+
+We built in [LEGO](https://go-acme.github.io/lego) to ease certificate management for your LDAP service.
+
+While developing, we got into some thinking about what best practices we should suggest. There are a few.
+
+* First, our main **convention** is that `devopsansiblede/ldap` image will only support DNS challenge for certificates. HTTP/S challenges won't be supported. Yes, that's a convention and not a recommendation – so you need to follow this one mandatorily.  
+*If you need to use HTTP/S challenge or want to use another certificate generation tool (like ACME requests managed by [Træfik](https://doc.traefik.io/traefik/https/acme/) and the usage of [devopsansiblede/acme_certs_extract](https://github.com/devops-ansible/acme-certs-extract) Docker image to extract and copy the certificate files), you could add a listener on the docker host that will stop the services within the `devopsansiblede/ldap` container by executing `_termSlapd` command. That will cause a `slapd` restart within the set period of `RUNNING_CHECK` seconds.*
+* We recommend you to use wildcard fqdns for requested `LEGO_CERT_DOMAIN`, e.g. `*.auth.example.com` where your ldap could be `ldap-master.auth.example.com`.  
+*That is for all certificates being listed in [Certificate Search](https://crt.sh) service and anybody could retrieve FQDNs from there at no effort.*
 ### Container Parameters
 
 Start a new openldap server instance, import config & data.ldif's from another instance and persist the state in _data_
 ```sh
 docker run -d -p 389:127.0.0.1:389 -p 636:636 -v $PWD/data/database:/var/lib/ldap -v $PWD/data/config:/etc/ldap/slapd.d -v $PWD/import:/import --name ldap devopsansiblede/ldap:latest
 ```
+
+_**We strongly recommend you not to publish the insecure port `389` – just don't use it when you can avoid. When you need to use it, please secure the connection in another way like building up a SSH tunnel**, e.g. by the command `ssh -L 389:172.17.0.3:389 ssh.host.example.com` where you bind your local port `389` to the remote port `389` of the Docker container with the IP `172.17.0.3` running on your remote server `ssh.host.example.com`._
 
 ### Volumes
 

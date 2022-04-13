@@ -15,7 +15,29 @@ apt-get install -yq --no-install-recommends \
     ldap-utils \
     krb5-kdc-ldap \
     db-util \
-    lego
+    dnsutils
+
+# gather, download and install newest GO version
+GO_URL="https://go.dev/dl/"
+GO_VERSION=$(curl -s "${GO_URL}" | grep 'download.*downloadBox' | head -n 1 | sed -nE 's/^.*(go[0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' )
+GO_FILENAME="${GO_VERSION}.linux-$( dpkg --print-architecture ).tar.gz"
+curl -LO "${GO_URL}${GO_FILENAME}"
+tar -C "${SCRIPT_PATH}" -xzf "${GO_FILENAME}"
+export GOROOT="${SCRIPT_PATH}/go"
+export PATH="${GOROOT}/bin:${PATH}"
+
+# install LEGO from source since bundled version is pretty old ...
+git clone https://github.com/go-acme/lego.git
+cd lego
+# checkout last release tag
+git checkout $( git tag -l | sort -V | tail -n 1 )
+# build latest `lego` version binary
+make build
+# place it as executable
+mv ./dist/lego /usr/local/bin/
+# clean up caches
+go clean -modcache
+cd "${SCRIPT_PATH}"
 
 # Since we work with templates, Jinja2 CLI should be present within the image
 pip install j2cli
