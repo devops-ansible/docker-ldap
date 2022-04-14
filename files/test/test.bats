@@ -13,10 +13,16 @@ load _testFunctions
     assert_output --partial '# numEntries: 2'
 }
 
-@test "LEGO certs creation basic test" {
+@test "TLS test with Let's Encrypt and LEGO" {
     run legoTest
     [ "${status}" -eq 0 ]
-    assert_output --partial "$( echo "${LEGO_CERT_DOMAIN}" | sed 's/^\*/\_/g' ).crt"
-    assert_output --partial "$( echo "${LEGO_CERT_DOMAIN}" | sed 's/^\*/\_/g' ).key"
+    assert_output --partial "$( lego_challenge certname ).crt"
+    assert_output --partial "$( lego_challenge certname ).key"
+
+    run ldapLE
+    [ "${status}" -eq 0 ]
+    assert_output --partial 'result: 0 Success'
+    assert_output --partial '# numResponses: 3'
+    assert_output --partial '# numEntries: 2'
     run teardownLego
 }

@@ -52,9 +52,10 @@ j2 ./templates/entrypoint.j2 -o ./bin/entrypoint
 # Make all bins executable – also the currently created `entrypoint`
 chmod a+x bin/*
 
-# Move scripts from install dir where they belong
-mv boot.d/* /boot.d/
-mv bin/*    /usr/local/bin/
+# Move files from install dir where they belong
+mv boot.d/*        /boot.d/
+mv bin/*           /usr/local/bin/
+mv templates/final /templates
 
 # Prepare testing if is being built with tests enabled
 if [ "${BUILD_ARG_TESTING}" = "true" ] || [ "${BUILD_ARG_TESTING}" = "yes" ]; then
@@ -64,6 +65,10 @@ if [ "${BUILD_ARG_TESTING}" = "true" ] || [ "${BUILD_ARG_TESTING}" = "yes" ]; th
     git clone https://github.com/bats-core/bats-core.git    "${TESTS_PATH}/bats"
     git clone https://github.com/bats-core/bats-support.git "${TESTS_PATH}/test_helper/bats-support"
     git clone https://github.com/bats-core/bats-assert.git  "${TESTS_PATH}/test_helper/bats-assert"
+    # Download LE staging CA for testing purposes
+    certsdir="${CUSTOM_CERTS_PATH:-/certs}"
+    mkdir -p "${certsdir}" && cd "${certsdir}" && { curl -O https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x1.pem ; curl -O https://letsencrypt.org/certs/staging/letsencrypt-stg-root-x2.pem ; cd -; }
+    source /boot.d/base.custom_certs.sh
 else
     # BATS is not initiated, so we should not extend the system PATH variable
     rm -f /boot.d/*_bats_*.sh

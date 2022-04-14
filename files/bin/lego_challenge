@@ -1,13 +1,35 @@
 #!/usr/bin/env bash
 
+getSans() {
+    sans="$( echo "${LEGO_CERT_DOMAIN}" | jq -r '.[]' 2> /dev/null )"
+    if [ "$?" -eq 0 ]; then
+        echo "${sans}"
+    else
+        echo "${LEGO_CERT_DOMAIN}"
+    fi
+}
+
+getPrimary() {
+    getSans | head -n 1
+}
+
 ###
 ## if no domain is specified, skip whole lego challenge process
 ###
 
 if [ -z ${LEGO_CERT_DOMAIN+x} ] || [ -z "${LEGO_CERT_DOMAIN}" ]; then
-    return
+    exit 1
 fi
 
+if [ ! -z ${1+x} ] && [ "$( echo "${1}" | tr '[:upper:]' '[:lower:]' )" = "primary" ]; then
+    getPrimary
+    exit 0
+fi
+
+if [ ! -z ${1+x} ] && [ "$( echo "${1}" | tr '[:upper:]' '[:lower:]' )" = "certname" ]; then
+    getPrimary | sed 's/^\*/\_/g'
+    exit 0
+fi
 
 ###
 ## prepare LEGO command arguments
@@ -30,15 +52,9 @@ if [ ! -z "${LEGO_DNS_RESOLVERS}" ]; then
     legoArgs+=('--dns.resolvers' "${LEGO_DNS_RESOLVERS}")
 fi
 
-snis="$( echo "${LEGO_CERT_DOMAIN}" | jq -r '.[]' )"
-if [ "$?" -eq 0 ]; then
-    for domain in ${snis}; do
-        legoArgs+=('--domains' "${domain}")
-    done
-else
-    legoArgs+=('--domains' "${LEGO_CERT_DOMAIN}")
-fi
-
+for domain in "$( getSans )"; do
+    legoArgs+=('--domains' "${domain}")
+done
 
 ###
 ## run LEGO command
@@ -47,7 +63,11 @@ fi
 # first try to renew certificate
 lego "${legoArgs[@]}" renew --days "${LEGO_RENEW_DAYS:-30}"
 
-if [ "$?" -ne "0" ]; then
+if [ "$?" -ne 0 ]; then
     # if renewal is not successfull, create new certificate
     lego "${legoArgs[@]}" run
 fi
+
+chmod    a+rx "${LEGO_PATH}" \
+              "${LEGO_PATH}/certificates"
+chmod -R a+r "${LEGO_PATH}/certificates"

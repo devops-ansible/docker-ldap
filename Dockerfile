@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}:${BASE_VERSION}
 
 MAINTAINER macwinnie <dev@macwinnie.me>
 
-# VOLUME  /etc/ldap/slapd.d   /var/lib/ldap
+# VOLUME  /etc/ldap/slapd.d   /var/lib/ldap   /lego
 WORKDIR /etc/ldap/slapd.d
 
 ARG INSTALLDIR="/usr/src/install"
@@ -33,6 +33,7 @@ ENV FORCE_RECONFIGURE  "false"
 
 ENV LEGO_PATH          "/lego"
 ENV LEGO_DNS_RESOLVERS "208.67.222.222:53"
+ENV TLS_CERTPATH       "/etc/ssl/certificates"
 
 COPY files/ ${INSTALLDIR}/
 

@@ -29,6 +29,10 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `LEGO_RENEW_DAYS`     | `30`                  | yes                | number of days when the certificate has to be renewed |
 | `LEGO_PATH`           | `/lego`               | no                 | absolute path where Lego account and created certificates live |
 | `LEGO_DNS_RESOLVERS`  | `208.67.222.222:53`   | no                 | DNS resolver against which the LEGO challenge will check existence of verification DNS entries – defaults to OpenDNS primary server. *Override with empty string to use Docker host default and – in case that one does not respond – the LEGO fallback (aka Google DNS).* |
+| `TLS_CERTPATH`        | `/etc/ssl/certificates` | no               | path for your custom TLS certificates (if not Let's Encrypt triggered by [LEGO](https://go-acme.github.io/lego)) |
+| `TLS_CERT_FILENAME`   |                       | yes                | LDAP TLS certificate file name within `TLS_CERTPATH` – **use only if no Let's Encrypt should be triggered!** |
+| `TLS_KEY_FILENAME`    |                       | yes                | LDAP TLS key file name belonging to `TLS_CERT_FILENAME` certificate within `TLS_CERTPATH` – **use only if no Let's Encrypt should be triggered!** |
+| `TLS_CA_FILENAME`     |                       | yes                | CA certificate file name within `TLS_CERTPATH` – **use only if no Let's Encrypt should be triggered!** |
 
 **For the usage of LEGO DNS challenge, you'll have to use the environmental variables needed for your DNS provider. You can find that configuration [within LEGO documentation](https://go-acme.github.io/lego/dns/).**
 
@@ -82,10 +86,12 @@ _**We strongly recommend you not to publish the insecure port `389` – just don
 
 * `/etc/ldap/slap.d` - Config database
 * `/var/lib/ldap` - Data database
+* `/lego` – The location where [LEGO](https://go-acme.github.io/lego) data lives, as your account for Let's Encrypt certificate creation, certificates, etc.
 
 ### Useful File Locations
 
-* `/certs` - location for custom certificates
+* `/certs` - location for custom CA certificates that should be trusted
+* `/etc/ssl/certificates` – the location where (by default) custom TLS certificates will be searched for
 * `/import/config.ldif` - Text file containing the exported config tree _(`${IMPORT_DIR}${IMPORT_CONFIG_FILE}`)_
 * `/import/data.ldif` - Text file containing the exported data tree _(`${IMPORT_DIR}${IMPORT_DATA_FILE}`)_
 * `/etc/defaults/slapd` - Slapd startup configuration

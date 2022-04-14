@@ -6,8 +6,12 @@ set -e
 ulimit -n ${LDAP_ULIMIT}
 export EP_PID=$$
 export ep_lockfile="/entrypoint.lock"
+export TLS_LDIF_FILE="/tmp/tls.ldif"
 
 {% if BUILD_ARG_TESTING in [ "yes", "true" ] -%}
+# generate a random string that is meant to be used as test ident
+export TESTING_IDENT="$( openssl rand -hex 3 )"
+
 # if starting with test mode, run testing
 if [ "${1}" == "test" ]; then
 

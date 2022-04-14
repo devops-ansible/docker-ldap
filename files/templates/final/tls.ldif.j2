@@ -1,0 +1,13 @@
+dn: cn=config
+changetype: modify
+{#replace: olcTLSCipherSuite
+olcTLSCipherSuite: {{ TLS_CIPHER_SUITE | default( 'HIGH' ) }}
+-#}
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: {{ TLS_CERTPATH }}/{{ TLS_CERT_FILENAME }}
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: {{ TLS_CERTPATH }}/{{ TLS_KEY_FILENAME }}
+-
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: {{ TLS_CERTPATH }}/{{ TLS_CA_FILENAME }}
