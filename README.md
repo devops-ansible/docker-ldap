@@ -26,6 +26,7 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `LEGO_ACCOUNT_EMAIL`  |                       | yes                | your account email for certificate challenges |
 | `LEGO_CERT_DOMAIN`    |                       | yes                | the domain (we recommend a wildcard, see below) the certificate should be challenged for. Either a single string `*.auth.example.com` or a JSON list like `[ "a.example.com", "b.example.com" ]` |
 | `LEGO_DNS_PROVIDER`   |                       | yes                | your DNS provider – see [list of LEGO DNS providers](https://go-acme.github.io/lego/dns/#dns-providers) |
+| `LEGO_RENEW_DAYS`     | `30`                  | yes                | number of days when the certificate has to be renewed |
 | `LEGO_PATH`           | `/lego`               | no                 | absolute path where Lego account and created certificates live |
 | `LEGO_DNS_RESOLVERS`  | `208.67.222.222:53`   | no                 | DNS resolver against which the LEGO challenge will check existence of verification DNS entries – defaults to OpenDNS primary server. *Override with empty string to use Docker host default and – in case that one does not respond – the LEGO fallback (aka Google DNS).* |
 

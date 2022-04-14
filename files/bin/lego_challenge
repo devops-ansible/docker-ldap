@@ -44,4 +44,10 @@ fi
 ## run LEGO command
 ###
 
-lego "${legoArgs[@]}" run
+# first try to renew certificate
+lego "${legoArgs[@]}" renew --days "${LEGO_RENEW_DAYS:-30}"
+
+if [ "$?" -ne "0" ]; then
+    # if renewal is not successfull, create new certificate
+    lego "${legoArgs[@]}" run
+fi
