@@ -21,7 +21,7 @@ legoTest() {
     for env_var in $( echo $json | jq -r 'to_entries | map( "\( .key )=\( .value | tostring )" ) | .[]' ); do
         export $env_var
     done
-    lego_challenge test
+    lego_challenge test > /dev/null 2>&1
     tree "${LEGO_PATH}"
     for key in $( echo "${json}"| jq -r 'keys[]' ); do
         unset $key

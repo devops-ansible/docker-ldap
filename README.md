@@ -24,10 +24,10 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `TESTRUN`             |                       | no                 | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
 | `RUNNING_CHECK`       | `30`                  | no                 | all `x` seconds (value of this variable) the entrypoint run with CMD `start` will check if slapd still is running. |
 | `LEGO_ACCOUNT_EMAIL`  |                       | yes                | your account email for certificate challenges |
-| `LEGO_CERT_DOMAIN`    |                       | yes                | the domain (we recommend a wildcard, see below) the certificate should be challenged for |
+| `LEGO_CERT_DOMAIN`    |                       | yes                | the domain (we recommend a wildcard, see below) the certificate should be challenged for. Either a single string `*.auth.example.com` or a JSON list like `[ "a.example.com", "b.example.com" ]` |
 | `LEGO_DNS_PROVIDER`   |                       | yes                | your DNS provider – see [list of LEGO DNS providers](https://go-acme.github.io/lego/dns/#dns-providers) |
 | `LEGO_PATH`           | `/lego`               | no                 | absolute path where Lego account and created certificates live |
-| `LEGO_DNS_RESOLVERS`  | `208.67.222.222:53`   | no                 | DNS resolver against which the LEGO challenge will check existence of verification DNS entries – defaults to OpenDNS primary server. |
+| `LEGO_DNS_RESOLVERS`  | `208.67.222.222:53`   | no                 | DNS resolver against which the LEGO challenge will check existence of verification DNS entries – defaults to OpenDNS primary server. *Override with empty string to use Docker host default and – in case that one does not respond – the LEGO fallback (aka Google DNS).* |
 
 **For the usage of LEGO DNS challenge, you'll have to use the environmental variables needed for your DNS provider. You can find that configuration [within LEGO documentation](https://go-acme.github.io/lego/dns/).**
 
@@ -60,11 +60,19 @@ While developing, we got into some thinking about what best practices we should 
 *If you need to use HTTP/S challenge or want to use another certificate generation tool (like ACME requests managed by [Træfik](https://doc.traefik.io/traefik/https/acme/) and the usage of [devopsansiblede/acme_certs_extract](https://github.com/devops-ansible/acme-certs-extract) Docker image to extract and copy the certificate files), you could add a listener on the docker host that will stop the services within the `devopsansiblede/ldap` container by executing `_termSlapd` command. That will cause a `slapd` restart within the set period of `RUNNING_CHECK` seconds.*
 * We recommend you to use wildcard fqdns for requested `LEGO_CERT_DOMAIN`, e.g. `*.auth.example.com` where your ldap could be `ldap-master.auth.example.com`.  
 *That is for all certificates being listed in [Certificate Search](https://crt.sh) service and anybody could retrieve FQDNs from there at no effort.*
+
 ### Container Parameters
 
-Start a new openldap server instance, import config & data.ldif's from another instance and persist the state in _data_
+Start a new openldap server instance, import config & data.ldif's from another instance and persist the state in `./data`:
+
 ```sh
-docker run -d -p 389:127.0.0.1:389 -p 636:636 -v $PWD/data/database:/var/lib/ldap -v $PWD/data/config:/etc/ldap/slapd.d -v $PWD/import:/import --name ldap devopsansiblede/ldap:latest
+docker run -d \
+           -p 389:127.0.0.1:389 -p 636:636 \
+           -v $( pwd )/data/database:/var/lib/ldap \
+           -v $( pwd )/data/config:/etc/ldap/slapd.d \
+           -v $( pwd )/import:/import \
+           --name ldap \
+       devopsansiblede/ldap:latest
 ```
 
 _**We strongly recommend you not to publish the insecure port `389` – just don't use it when you can avoid. When you need to use it, please secure the connection in another way like building up a SSH tunnel**, e.g. by the command `ssh -L 389:172.17.0.3:389 ssh.host.example.com` where you bind your local port `389` to the remote port `389` of the Docker container with the IP `172.17.0.3` running on your remote server `ssh.host.example.com`._

@@ -1,25 +1,47 @@
 #!/usr/bin/env bash
 
-if [ ! -z ${1+x} ] && [ "$( echo "${1}" | tr '[:upper:]' '[:lower:]' )" = "test" ]; then
-    # for test purposes, we only check against the staging server of
-    # LE if the certificate challenge is sucessfull.
-    echo 'running staging lego challenge'
-    lego --path="${LEGO_PATH}" \
-         --email="${LEGO_ACCOUNT_EMAIL}" \
-         --domains="${LEGO_CERT_DOMAIN}" \
-         --dns="${LEGO_DNS_PROVIDER}" \
-         --dns.resolvers="${LEGO_DNS_RESOLVERS}" \
-         --accept-tos \
-         --server=https://acme-staging-v02.api.letsencrypt.org/directory  \
-         run
-else
-    # when running in prod mode, the productive LE servers are used
-    echo 'running productive lego challenge'
-    lego --path="${LEGO_PATH}" \
-         --email="${LEGO_ACCOUNT_EMAIL}" \
-         --domains="${LEGO_CERT_DOMAIN}" \
-         --dns="${LEGO_DNS_PROVIDER}" \
-         --dns.resolvers="${LEGO_DNS_RESOLVERS}" \
-         --accept-tos \
-         run
+###
+## if no domain is specified, skip whole lego challenge process
+###
+
+if [ -z ${LEGO_CERT_DOMAIN+x} ] || [ -z "${LEGO_CERT_DOMAIN}" ]; then
+    return
 fi
+
+
+###
+## prepare LEGO command arguments
+###
+
+legoArgs=('--accept-tos')
+legoArgs+=('--path' "${LEGO_PATH}")
+legoArgs+=('--email' "${LEGO_ACCOUNT_EMAIL}")
+legoArgs+=('--dns' "${LEGO_DNS_PROVIDER}")
+
+if [ ! -z ${1+x} ] && [ "$( echo "${1}" | tr '[:upper:]' '[:lower:]' )" = "test" ]; then
+    # add Let's Encrypt staging server for test purpose
+    legoArgs+=('--server' 'https://acme-staging-v02.api.letsencrypt.org/directory')
+fi
+
+# use DNS resolvers defined ...
+# if empty string don't add argument and use LEGO defaults:
+# Docker host default and Google DNS as fallback
+if [ ! -z "${LEGO_DNS_RESOLVERS}" ]; then
+    legoArgs+=('--dns.resolvers' "${LEGO_DNS_RESOLVERS}")
+fi
+
+snis="$( echo "${LEGO_CERT_DOMAIN}" | jq -r '.[]' )"
+if [ "$?" -eq 0 ]; then
+    for domain in ${snis}; do
+        legoArgs+=('--domains' "${domain}")
+    done
+else
+    legoArgs+=('--domains' "${LEGO_CERT_DOMAIN}")
+fi
+
+
+###
+## run LEGO command
+###
+
+lego "${legoArgs[@]}" run
