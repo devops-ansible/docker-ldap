@@ -23,8 +23,11 @@ OpenLDAP Server based on [devopsansiblede/baseimage](https://github.com/devops-a
 | `ADDITIONAL_SCHEMAS`  |                       | yes                | comma separated list of schemas to be enabled |
 | `TESTRUN`             |                       | no                 | for development purpose to start the container without running `/boot.sh` in entrypoint when starting with `bash` as `CMD` |
 | `RUNNING_CHECK`       | `30`                  | no                 | all `x` seconds (value of this variable) the entrypoint run with CMD `start` will check if slapd still is running. |
-| `LEGO_ACCOUNT_EMAIL`  |                       | yes                |  |
-| `LEGO_CERT_DOMAIN`    |                       | yes                |  |
+| `LEGO_ACCOUNT_EMAIL`  |                       | yes                | your account email for certificate challenges |
+| `LEGO_CERT_DOMAIN`    |                       | yes                | the domain (we recommend a wildcard, see below) the certificate should be challenged for |
+| `LEGO_DNS_PROVIDER`   |                       | yes                | your DNS provider – see [list of LEGO DNS providers](https://go-acme.github.io/lego/dns/#dns-providers) |
+| `LEGO_PATH`           | `/lego`               | no                 | absolute path where Lego account and created certificates live |
+| `LEGO_DNS_RESOLVERS`  | `208.67.222.222:53`   | no                 | DNS resolver against which the LEGO challenge will check existence of verification DNS entries – defaults to OpenDNS primary server. |
 
 **For the usage of LEGO DNS challenge, you'll have to use the environmental variables needed for your DNS provider. You can find that configuration [within LEGO documentation](https://go-acme.github.io/lego/dns/).**
 

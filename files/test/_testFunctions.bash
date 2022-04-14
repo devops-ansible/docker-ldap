@@ -22,7 +22,7 @@ legoTest() {
         export $env_var
     done
     lego_challenge test
-    tree "${LEGO_PATH:-/lego}"
+    tree "${LEGO_PATH}"
     for key in $( echo "${json}"| jq -r 'keys[]' ); do
         unset $key
     done

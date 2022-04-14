@@ -31,6 +31,9 @@ ENV RUNNING_CHECK      "30"
 
 ENV FORCE_RECONFIGURE  "false"
 
+ENV LEGO_PATH          "/lego"
+ENV LEGO_DNS_RESOLVERS "208.67.222.222:53"
+
 COPY files/ ${INSTALLDIR}/
 
 RUN  chmod +x ${INSTALLDIR}/install.sh && \
