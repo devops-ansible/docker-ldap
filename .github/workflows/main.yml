@@ -34,6 +34,8 @@ jobs:
           context: .
           load:    true
           tags:    "${{ env.IMAGE_NAME }}:${{ env.TAG_TESTING }}"
+          build-args: |
+            BUILD_ARG_TESTING=yes
 
       - name: Running the testing image and waiting for 60 seconds to ensure the configuration took place
         id:   image_test
@@ -41,9 +43,6 @@ jobs:
           docker run --name ldap_test -t --rm \
                  -e LEGO_TEST_CONFIG='${{ secrets.LEGO_TEST_CONFIG }}' \
                  ${{ env.IMAGE_NAME }}:${{ env.TAG_TESTING }} test
-
-      - name: Clean up test
-        run:  docker stop ldap_test
 
   release:
     name:    Build image
