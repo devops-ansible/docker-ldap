@@ -6,9 +6,11 @@ fi
 # if given CMD is `start` do
 if [ "${1}" == "start" ]; then
 
-    if [ -f "${ep_lockfile}" ]; then
-        echo -e "\033[1;30;41m \`entrypoint start\` may only be run once at a time ... \033[0m"
-        exit 1
+    if [[ $( ps -ef | grep "${ENTRYPOINT_PATH}" | grep -v "ps -ef" | grep -v "grep" | wc -l ) -ge 0 ]];then
+        if [ -f "${ep_lockfile}" ]; then
+            echo -e "\033[1;30;41m \`entrypoint start\` may only be run once at a time ... \033[0m"
+            exit 1
+        fi
     fi
 
     touch "${ep_lockfile}"

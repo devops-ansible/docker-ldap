@@ -3,6 +3,18 @@
 # kill script when error occurs
 set -e
 
+ENTRYPOINT_PATH=${BASH_SOURCE[0]}
+{# ## not needed due to container structure
+# if and while ${ENTRYPOINT_PATH} is a symlink resolve that link to source
+while [ -h "${ENTRYPOINT_PATH}" ]; do
+    PARENT_DIR=$( cd -P "$( dirname "${ENTRYPOINT_PATH}" )" >/dev/null 2>&1 && pwd )
+    ENTRYPOINT_PATH=$( readlink "${ENTRYPOINT_PATH}" )
+    # relative symlinks need to be resolved relative to current path
+    [[ ${ENTRYPOINT_PATH} != /* ]] && ENTRYPOINT_PATH="${PARENT_DIR}/${ENTRYPOINT_PATH}"
+done
+#}
+export ENTRYPOINT_PATH
+
 ulimit -n ${LDAP_ULIMIT}
 export EP_PID=$$
 export ep_lockfile="/entrypoint.lock"
