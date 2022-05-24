@@ -52,7 +52,7 @@ if [ ! -z "${LEGO_DNS_RESOLVERS}" ]; then
     legoArgs+=('--dns.resolvers' "${LEGO_DNS_RESOLVERS}")
 fi
 
-for domain in "$( getSans )"; do
+for domain in $( getSans ); do
     legoArgs+=('--domains' "${domain}")
 done
 
