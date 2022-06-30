@@ -16,6 +16,7 @@ if [ "${1}" == "start" ]; then
     touch "${ep_lockfile}"
 
     _term() {
+        echo -e "\033[1;42;97m exit of container initiated ... \033[0m"
         rm -f "${ep_lockfile}"
         _termSlapd
         set -e

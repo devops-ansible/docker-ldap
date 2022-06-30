@@ -4,6 +4,9 @@
 # but we don't want to break here ...
 set +e
 
+# try to remove TLS / SSL configuration – if existent
+slapd_clear_tls
+
 # retrieve actual PID of slapd running
 slapdPid="$( _slapdPid )"
 if [ "$?" -eq 0 ]; then

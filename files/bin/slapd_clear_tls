@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import re
+with open( 'cn=config.ldif', 'r' ) as f:
+   s = f.read()
+   f.close()
+
+regexString = r'^olcTLS((CertificateFile)|(CertificateKeyFile)|(CACertificateFile)|(CipherSuite)):.*\n(\s.+\n)?'
+with open( 'cn=config.ldif', 'w' ) as f:
+    f.write( re.sub(regexString, r'', s, flags=re.M) )
+    f.close()
