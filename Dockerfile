@@ -3,7 +3,7 @@ ARG BASE_VERSION=latest
 
 FROM ${BASE_IMAGE}:${BASE_VERSION}
 
-MAINTAINER macwinnie <dev@macwinnie.me>
+LABEL org.opencontainers.image.authors="macwinnie <dev@macwinnie.me>"
 
 # VOLUME  /etc/ldap/slapd.d   /var/lib/ldap   /lego
 WORKDIR /etc/ldap/slapd.d
